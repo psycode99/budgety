@@ -124,7 +124,7 @@ def get_budget(budget_id):
 @login_required
 def create_budget():
     if request.method == 'POST':
-        name = request.form['name'].title()
+        budget_name = request.form['name'].title()
         start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d').date()
         end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%d').date()
         total_amount = float(request.form['total_amount'])
@@ -142,7 +142,7 @@ def create_budget():
             flash("Category amounts are greater than set budget total amount", "error")
             return redirect(url_for('dashboard'))
         
-        new_budget = Budget(name=name, start_date=start_date, end_date=end_date, total_amount=total_amount, user_id=current_user.id)
+        new_budget = Budget(name=budget_name, start_date=start_date, end_date=end_date, total_amount=total_amount, user_id=current_user.id)
         db.session.add(new_budget)
         db.session.commit()
         
