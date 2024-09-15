@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budgety | Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .budget-card {
+            cursor: pointer;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+        .budget-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .navbar {
+            background-color: #007bff;
+        }
+        .navbar-brand {
+            color: white !important;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .nav-link:hover {
+            color: white !important;
+        }
+        .modal-header {
+            border-bottom: none;
+        }
+        .modal-body {
+            padding: 2rem;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .center-button {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .category-group {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+        /* Flash message styles */
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">budgety</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url_for('add_expense')}}">Expenses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+           <!-- Flash messages section -->
+           {% with messages = get_flashed_messages(with_categories=true) %}
+           {% if messages %}
+               <div class="mb-4">
+                   {% for category, message in messages %}
+                       <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                           {{ message }}
+                           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                       </div>
+                   {% endfor %}
+               </div>
+           {% endif %}
+       {% endwith %}
+        <h1 class="mb-4">Your Budgets</h1>
+       
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <!-- Example budget cards -->
+             {% if budgets%}
+                {% for budget in budgets %}
+                    <div class="col">
+                        <div class="card budget-card h-100" data-budget-id="{{ budget.id }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{budget.name}}</h5>
+                                <p class="card-text">Total: ₦{{budget.total_amount}}</p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        {{budget.start_date}} <strong>to</strong> {{budget.end_date}}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <h5 >You have no budgets yet</h5>
+            {% endif %}
+        </div>
+        <button class="btn btn-primary mb-4 my-3" data-bs-toggle="modal" data-bs-target="#createBudgetModal">Create Budget</button>
+    </div>
+
+    <!-- Budget Details Modal -->
+    <div class="modal fade" id="budgetDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="budgetDetailsTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="budgetDetailsBody">
+                    <!-- Budget details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Budget Modal -->
+         <!-- Create Budget Modal -->
+    <div class="modal fade" id="createBudgetModal" tabindex="-1" aria-labelledby="createBudgetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createBudgetModalLabel">Create Budget</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/create_budget" method="post">
+                        <div class="form-group mb-3">
+                            <label for="name">Budget Name</label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="start_date">Start Date</label>
+                            <input type="date" id="start_date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="end_date">End Date</label>
+                            <input type="date" id="end_date" name="end_date" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="total_amount">Total Budget Amount</label>
+                            <input type="number" id="total_amount" name="total_amount" step="0.01" class="form-control" required>
+                        </div>
+                        <h5 class="mt-4 mb-3">Budget Categories</h5>
+                        <div id="categories">
+                            <div class="category-group">
+                                <label for="category_name_1">Category Name</label>
+                                <input type="text" id="category_name_1" name="category_name[]" class="form-control mb-2" required>
+                                <label for="category_amount_1">Amount</label>
+                                <input type="number" id="category_amount_1" name="category_amount[]" step="0.01" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary mt-3" onclick="addCategory()">Add Category</button>
+                        <div class="center-button">
+                            <button type="submit" class="btn btn-primary mt-4">Create Budget</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- (Same as before) -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const budgetCards = document.querySelectorAll('.budget-card');
+            const budgetDetailsModal = new bootstrap.Modal(document.getElementById('budgetDetailsModal'));
+
+            budgetCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const budgetId = this.getAttribute('data-budget-id');
+                    
+                    // Fetch budget details dynamically from Flask
+                    fetch(`/budget/${budgetId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('budgetDetailsTitle').textContent = data.name;
+                            const modalBody = document.getElementById('budgetDetailsBody');
+                            modalBody.innerHTML = `
+                                <p>Total Budget: ₦${data.total_amount.toFixed(2)}</p>
+                                <p>Date Range: ${data.start_date} <strong> to </strong> ${data.end_date}</p>
+                                <h6 class="mt-4">Categories:</h6>
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Budget</th>
+                                            <th>Spent</th>
+                                            <th>Remaining</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.categories.map(category => `
+                                            <tr>
+                                                <td>${category.name}</td>
+                                                <td>₦${category.amount.toFixed(2)}</td>
+                                                <td>₦${category.spent.toFixed(2)}</td>
+                                                <td>₦${category.remaining.toFixed(2)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `;
+                            budgetDetailsModal.show();
+                        })
+                        .catch(error => console.error('Error fetching budget details:', error));
+                });
+            });
+        });
+
+        let categoryCount = 1;
+
+        function addCategory() {
+            categoryCount++;
+        
+            const categoriesDiv = document.getElementById('categories');
+            const newCategory = document.createElement('div');
+            newCategory.className = 'category-group mt-3';
+        
+            newCategory.innerHTML = `
+                <label for="category_name_${categoryCount}">Category Name</label>
+                <input type="text" id="category_name_${categoryCount}" name="category_name[]" class="form-control mb-2" required>
+                <label for="category_amount_${categoryCount}">Amount</label>
+                <input type="number" id="category_amount_${categoryCount}" name="category_amount[]" step="0.01" class="form-control" required>
+            `;
+        
+            categoriesDiv.appendChild(newCategory);
+        }
+        
+    </script>
+</body>
+</html>
