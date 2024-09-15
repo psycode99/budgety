@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from sqlalchemy import desc
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -49,6 +50,12 @@ with app.app_context():
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -90,12 +97,12 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('login'))
+    return redirect(url_for('home'))
 
-@app.route('/')
+@app.route('/dashboard')
 @login_required
 def dashboard():
-    budgets = Budget.query.filter_by(user_id=current_user.id).all()
+    budgets = Budget.query.filter_by(user_id=current_user.id).order_by(desc(Budget.id)).all()
     return render_template('budget.html', budgets=budgets)
 
 
@@ -181,7 +188,7 @@ def add_expense():
     
     categories = Category.query.join(Budget).filter(Budget.user_id == current_user.id).all()
     budgets = Budget.query.filter_by(user_id=current_user.id).all()
-    expenses = Expense.query.join(Category).join(Budget).filter(Budget.user_id == current_user.id).all()
+    expenses = Expense.query.join(Category).join(Budget).filter(Budget.user_id == current_user.id).order_by(desc(Expense.id)).all()
 
     return render_template('add_expense.html', categories=categories, budgets=budgets, expenses=expenses)
 
