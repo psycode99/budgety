@@ -105,8 +105,12 @@
         <div class="container">
             <a href="#" class="logo">budgety</a>
             <div class="nav-links">
+                {% if is_authenticated %}
+                <a href="{{url_for('dashboard')}}"><i class="fas fa-user"></i> Dashboard</a>
+                {% else %}
                 <a href="{{url_for('login')}}"><i class="fas fa-sign-in-alt"></i> Log In</a>
                 <a href="{{url_for('signup')}}"><i class="fas fa-user-plus"></i> Sign Up</a>
+                {% endif %}
             </div>
         </div>
     </nav>

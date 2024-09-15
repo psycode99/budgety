@@ -53,7 +53,7 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    return render_template('home.html', is_authenticated=current_user.is_authenticated)
 
 
 @app.route('/signup', methods=['GET', 'POST'])
